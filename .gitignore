@@ -1,5 +1,12 @@
 /assets/
 
 vercel.json
+config.py
 
 create_tables.sql
+
+/__pycache__/
+
+/venv/
+
+*.txt
