@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediksi Tanaman</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>Prediksi Tanaman</h1>
+    <button id="loadPredictions">Load Predictions</button>
+    <div id="predictions"></div>
+
+    <script>
+        document.getElementById('loadPredictions').addEventListener('click', function() {
+            fetch('/prediction/predict')
+                .then(response => response.json())
+                .then(data => {
+                    const predictionsDiv = document.getElementById('predictions');
+                    predictionsDiv.innerHTML = '<h2>ARIMA</h2>';
+                    for (const [plant, forecast] of Object.entries(data.arima)) {
+                        predictionsDiv.innerHTML += `<h3>${plant}</h3>`;
+                        predictionsDiv.innerHTML += `<p>${forecast.join(', ')}</p>`;
+                    }
+                    predictionsDiv.innerHTML += '<h2>TES</h2>';
+                    for (const [plant, forecast] of Object.entries(data.tes)) {
+                        predictionsDiv.innerHTML += `<h3>${plant}</h3>`;
+                        predictionsDiv.innerHTML += `<p>${forecast.join(', ')}</p>`;
+                    }
+                });
+        });
+    </script>
+</body>
+</html>

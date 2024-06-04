@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <title>Dashboard</title>
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-light border-right" id="sidebar-wrapper">
+            <div class="sidebar-heading">Dashboard</div>
+            <div class="list-group list-group-flush">
+                <a href="#analytics-section" class="list-group-item list-group-item-action bg-light" id="dashboard-link">Dashboard</a>
+                <div id="sub-menu" style="display: none;">
+                    <a href="#prediksi-section" class="list-group-item list-group-item-action bg-light">Prediksi Penjualan</a>
+                    <a href="{{ url_for('auth.logout') }}" class="list-group-item list-group-item-action bg-light">Logout</a>
+                </div>
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <button class="btn btn-primary" id="menu-toggle"><i class="fas fa-bars"></i></button>
+            </nav>
+
+            <div class="container-fluid">
+                <h1 class="mt-4">Dashboard</h1>
+
+                <!-- Analytics Section -->
+                <div id="analytics-section">
+                    <h2>Analytics</h2>
+                    <canvas id="rentalChart"></canvas>
+                    <div id="rental-table-section">
+                        <h2>Daftar Penyewa</h2>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Penyewa</th>
+                                    <th>Tanaman</th>
+                                    <th>Jenis Tanaman</th>
+                                    <th>Status Penyewaan</th>
+                                    <th>Tanggal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rental-table-body">
+                                {% for rental in rentals %}
+                                <tr>
+                                    <td>{{ rental.nama_penyewa }}</td>
+                                    <td>{{ rental.tanaman }}</td>
+                                    <td>{{ rental.jenis_tanaman }}</td>
+                                    <td>{{ rental.status }}</td>
+                                    <td>{{ rental.tanggal }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Prediksi Penjualan Section -->
+                <div id="prediksi-section" style="display:none;">
+                    <h2>Prediksi Penjualan</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Bulan</th>
+                                <th>ARIMA</th>
+                                <th>TES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prediction-table-body">
+                            {% for prediction in predictions %}
+                            <tr>
+                                <td>{{ prediction.bulan }}</td>
+                                <td>{{ prediction.arima }}</td>
+                                <td>{{ prediction.tes }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Export Import Section -->
+                <div id="export-import-section">
+                    <h2>Export & Import Data</h2>
+                    <button class="btn btn-success" id="export-button">Export Data</button>
+                    <button class="btn btn-primary" id="import-button">Import Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS, Popper.js, dan jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('wrapper').classList.toggle('toggled');
+        });
+
+        document.getElementById('dashboard-link').addEventListener('click', function() {
+            var subMenu = document.getElementById('sub-menu');
+            subMenu.style.display = subMenu.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Contoh kode untuk menampilkan grafik
+        var ctx = document.getElementById('rentalChart').getContext('2d');
+        var rentalChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'Penyewaan',
+                    data: [12, 19, 3, 5, 2, 3, 7],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
