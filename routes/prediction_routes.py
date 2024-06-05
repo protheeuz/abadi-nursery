@@ -9,37 +9,30 @@ prediction_blueprint = Blueprint('prediction', __name__)
 
 @prediction_blueprint.route('/predict')
 def predict():
-    # Load CSV dataset
     csv_data = pd.read_csv('data/dataset_fix.csv')
     csv_data['waktu'] = pd.to_datetime(csv_data['waktu'], format='%Y-%m')
     
-    # Load aggregated bookings from the database
     cur = mysql.connection.cursor()
     cur.execute("SELECT nama_tanaman, jenis_tanaman, total_quantity, bulan, tahun FROM aggregated_bookings")
     aggregated_data = cur.fetchall()
     cur.close()
 
-    # Convert aggregated data to DataFrame
     aggregated_df = pd.DataFrame(aggregated_data, columns=['nama_tanaman', 'jenis_tanaman', 'total_quantity', 'bulan', 'tahun'])
     print("Aggregated Data from DB:")
     print(aggregated_df.head())
 
-    # Combine year and month to create 'waktu' column
     aggregated_df['waktu'] = pd.to_datetime(aggregated_df['tahun'].astype(str) + '-' + aggregated_df['bulan'].astype(str) + '-01')
 
-    # Combine CSV data and aggregated bookings
     csv_data = csv_data.rename(columns={'jumlah_tersewa': 'total_quantity'})
     combined_data = pd.concat([csv_data, aggregated_df[['waktu', 'jenis_tanaman', 'nama_tanaman', 'total_quantity']]], ignore_index=True)
     print("Combined Data:")
     print(combined_data.head())
 
-    # Group by jenis_tanaman
     grouped_data = combined_data.groupby('jenis_tanaman')
 
     forecasts_arima = {}
     forecasts_tes = {}
 
-    # Parameters for ARIMA and TES
     arima_params = {
         'Anggrek': {'order': (2, 1, 1)},
         'Koleksi Kita': {'order': (0, 0, 0)},
@@ -51,15 +44,13 @@ def predict():
         'Tanaman Besar': {'trend': 'add', 'seasonal': 'add', 'seasonal_periods': 12, 'alpha': 0.4, 'beta': 0.6, 'gamma': 0.2},
     }
 
-    # Default parameters
     default_arima_params = {'order': (1, 1, 1)}
     default_tes_params = {'trend': 'add', 'seasonal': 'add', 'seasonal_periods': 12, 'alpha': 0.3, 'beta': 0.3, 'gamma': 0.3}
 
-    # Generate forecasts
     for name, group in grouped_data:
         print(f"Processing group: {name}")
         group = group.sort_values(by='waktu')
-        group = group.drop_duplicates(subset='waktu', keep='first')  # Drop duplicates
+        group = group.drop_duplicates(subset='waktu', keep='first')  
         group.set_index('waktu', inplace=True)
         group = group.asfreq('MS')
 
@@ -67,7 +58,6 @@ def predict():
             print(f"Skipping {name} due to insufficient data")
             continue
 
-        # Train/Test split
         train_data = group['total_quantity'].iloc[:-12]
         test_data = group['total_quantity'].iloc[-12:]
 
@@ -75,7 +65,6 @@ def predict():
             print(f"Skipping {name} due to empty train or test data")
             continue
 
-        # ARIMA
         try:
             arima_param = arima_params.get(name, default_arima_params)
             model_arima = ARIMA(train_data, order=arima_param['order'])
@@ -87,7 +76,6 @@ def predict():
             print(f"Error fitting ARIMA for {name}: {e}")
             continue
 
-        # TES
         try:
             tes_param = tes_params.get(name, default_tes_params)
             model_tes = ExponentialSmoothing(train_data, **{k: v for k, v in tes_param.items() if k not in ['alpha', 'beta', 'gamma']})
