@@ -1,7 +1,7 @@
 /assets/
 
 vercel.json
-config.py
+
 
 create_tables.sql
 
@@ -10,3 +10,4 @@ create_tables.sql
 /venv/
 
 *.txt
+config.py
