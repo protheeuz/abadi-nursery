@@ -12,3 +12,4 @@ create_tables.sql
 *.txt
 config.py
 .gitignore
+/venv/
