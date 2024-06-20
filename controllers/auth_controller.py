@@ -8,7 +8,7 @@ def register():
     username = data.get('username')
     password = data.get('password')
     nama_lengkap = data.get('nama_lengkap')
-    role = 'penyewa'
+    role = 'admin'
 
     hashed_password = generate_password_hash(password)
 

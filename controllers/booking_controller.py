@@ -299,26 +299,37 @@ def update_booking_status(booking_id, new_status):
 
         if new_status == 'approved':
             # Ambil semua detail pemesanan
-            cur.execute("SELECT nama_tanaman, jenis_tanaman, quantity, DATE_FORMAT(start_date, '%Y') as year, DATE_FORMAT(start_date, '%m') as month FROM booking_details bd JOIN bookings b ON bd.booking_id = b.id WHERE b.id = %s", (booking_id,))
+            cur.execute("""
+                SELECT bd.nama_tanaman, bd.jenis_tanaman, bd.quantity, 
+                DATE_FORMAT(b.start_date, '%%Y') as year, DATE_FORMAT(b.start_date, '%%m') as month 
+                FROM booking_details bd 
+                JOIN bookings b ON bd.booking_id = b.id 
+                WHERE b.id = %s
+            """, (booking_id,))
             booking_details = cur.fetchall()
 
             for detail in booking_details:
                 nama_tanaman = detail[0]
                 jenis_tanaman = detail[1]
                 quantity = detail[2]
-                month = detail[4]
                 year = detail[3]
+                month = detail[4]
 
                 # Periksa apakah entri sudah ada di tabel aggregated_bookings
-                cur.execute("SELECT id FROM aggregated_bookings WHERE nama_tanaman = %s AND jenis_tanaman = %s AND month = %s AND year = %s",
-                            (nama_tanaman, jenis_tanaman, month, year))
+                cur.execute("""
+                    SELECT id FROM aggregated_bookings 
+                    WHERE nama_tanaman = %s AND jenis_tanaman = %s AND bulan = %s AND tahun = %s
+                """, (nama_tanaman, jenis_tanaman, month, year))
                 aggregated_entry = cur.fetchone()
 
                 if aggregated_entry:
-                    cur.execute("UPDATE aggregated_bookings SET quantity = quantity + %s WHERE id = %s", (quantity, aggregated_entry[0]))
+                    cur.execute("UPDATE aggregated_bookings SET quantity = quantity + %s WHERE id = %s", 
+                                (quantity, aggregated_entry[0]))
                 else:
-                    cur.execute("INSERT INTO aggregated_bookings (nama_tanaman, jenis_tanaman, quantity, month, year) VALUES (%s, %s, %s, %s, %s)",
-                                (nama_tanaman, jenis_tanaman, quantity, month, year))
+                    cur.execute("""
+                        INSERT INTO aggregated_bookings (nama_tanaman, jenis_tanaman, quantity, bulan, tahun) 
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (nama_tanaman, jenis_tanaman, quantity, month, year))
 
         mysql.connection.commit()
         cur.close()
@@ -328,7 +339,6 @@ def update_booking_status(booking_id, new_status):
         mysql.connection.rollback()
         print(f"Error updating booking status: {e}")
         return jsonify({"message": str(e)}), 500
-
     
 @jwt_required()
 def get_pending_bookings():
@@ -565,6 +575,7 @@ def get_user_approved_bookings():
         print(f"Error fetching user approved bookings: {e}")
         return jsonify({'message': str(e)}), 500
 
+VALID_STATUSES = ['Belum dikirim', 'Sedang diproses', 'Sedang dikemas', 'Sedang dikirim', 'Sudah sampai']
 
 @jwt_required()
 def update_delivery_status(booking_id, new_status):
@@ -574,11 +585,29 @@ def update_delivery_status(booking_id, new_status):
 
     try:
         cur = mysql.connection.cursor()
-        cur.execute("UPDATE bookings SET status_pengiriman = %s WHERE id = %s", (new_status, booking_id))
-        mysql.connection.commit()
-        cur.close()
 
-        return jsonify({"message": "Delivery status updated successfully"}), 200
+        # Log query dan parameter untuk debug
+        print(f"Received booking ID: {booking_id}")
+        print(f"Received new status: {new_status}")
+
+        update_query = "UPDATE bookings SET status_pengiriman = %s WHERE id = %s"
+        cur.execute(update_query, (new_status, booking_id))
+        mysql.connection.commit()
+
+        # Verifikasi perubahan dengan mengambil baris yang diperbarui
+        cur.execute("SELECT status_pengiriman FROM bookings WHERE id = %s", (booking_id,))
+        updated_status = cur.fetchone()
+
+        if updated_status:
+            print(f"Successfully updated booking ID {booking_id} to status: {updated_status[0]}")
+            cur.close()
+            return jsonify({"message": "Delivery status updated successfully", "status_pengiriman": updated_status[0]}), 200
+        else:
+            print(f"Failed to find booking ID {booking_id} after update.")
+            cur.close()
+            return jsonify({"message": "Failed to update delivery status"}), 400
+
     except Exception as e:
+        mysql.connection.rollback()
         print(f"Error updating delivery status: {e}")
         return jsonify({"message": str(e)}), 500

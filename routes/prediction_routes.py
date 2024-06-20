@@ -13,7 +13,7 @@ def predict():
     csv_data['waktu'] = pd.to_datetime(csv_data['waktu'], format='%Y-%m')
     
     cur = mysql.connection.cursor()
-    cur.execute("SELECT nama_tanaman, jenis_tanaman, total_quantity, bulan, tahun FROM aggregated_bookings")
+    cur.execute("SELECT nama_tanaman, jenis_tanaman, quantity, bulan, tahun FROM aggregated_bookings")
     aggregated_data = cur.fetchall()
     cur.close()
 

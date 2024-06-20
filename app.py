@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 from flask_mysqldb import MySQL
 from config import Config
 from flask_jwt_extended import JWTManager
@@ -18,6 +18,20 @@ app.config['UPLOAD_FOLDER_PROFILE'] = './assets/profile/'
 mysql = MySQL(app)
 jwt = JWTManager(app)
 CORS(app)
+
+# Rute untuk melayani file gambar
+@app.route('/bookings/<filename>')
+def uploaded_file_bookings(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER_BOOKINGS'], filename)
+
+@app.route('/products/<filename>')
+def uploaded_file_products(filename):
+    print(f"Requesting file: {filename}") 
+    return send_from_directory(app.config['UPLOAD_FOLDER_PRODUCTS'], filename)
+
+@app.route('/profile/<filename>')
+def uploaded_file_profile(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER_PROFILE'], filename)
 
 # Daftarkan blueprint
 from routes.product_routes import product_blueprint
