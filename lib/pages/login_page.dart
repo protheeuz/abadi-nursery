@@ -4,20 +4,21 @@ import 'package:abadinursery/services/api_service.dart';
 import 'package:abadinursery/models/user_model.dart';
 import '../services/session_manager.dart';
 import 'admin_dashboard.dart'; // Import dashboard admin
-import 'penyewa_dashboard.dart';
-import 'register_page.dart'; // Import dashboard penyewa
+import 'penyewa_dashboard.dart'; // Import dashboard penyewa
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _passwordVisible = false; // Tambahkan ini
 
   void _login() async {
     String username = _usernameController.text.trim();
@@ -35,6 +36,8 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final response = await ApiService.login(username, password);
 
+      if (!mounted) return; // Pastikan widget masih terpasang
+
       setState(() {
         _isLoading = false;
       });
@@ -43,6 +46,8 @@ class _LoginPageState extends State<LoginPage> {
         // Simpan token dan user data
         await SessionManager.saveAccessToken(response['token']);
         final user = User.fromJson(response['user']);
+
+        if (!mounted) return;
 
         // Redirect berdasarkan peran
         if (user.role == 'admin') {
@@ -69,6 +74,8 @@ class _LoginPageState extends State<LoginPage> {
             "Error", "Gagal login. Silakan cek username dan password Anda.");
       }
     } catch (e) {
+      if (!mounted) return; // Pastikan widget masih terpasang
+
       setState(() {
         _isLoading = false;
       });
@@ -78,6 +85,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showCupertinoDialog(String title, String message) {
+    if (!mounted) return; // Pastikan widget masih terpasang
     showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
@@ -165,11 +173,25 @@ class _LoginPageState extends State<LoginPage> {
                           const BorderRadius.all(Radius.circular(10))),
                   child: TextField(
                     controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Masukkan Password',
-                        contentPadding: EdgeInsets.all(10)),
+                    obscureText:
+                        !_passwordVisible, // Use the updated _passwordVisible value here
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Masukkan Password',
+                      contentPadding: const EdgeInsets.all(10),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(

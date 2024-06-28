@@ -7,16 +7,16 @@ class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  RegisterPageState createState() => RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class RegisterPageState extends State<RegisterPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _namaLengkapController =
       TextEditingController(); // Controller untuk Nama Lengkap
   bool _isLoading = false;
-  bool _obscurePassword = true; // Obscure password flag
+  bool _passwordVisible = false; // Tambahkan ini
 
   void _register() async {
     String username = _usernameController.text.trim();
@@ -35,6 +35,9 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       final response =
           await ApiService.register(username, password, namaLengkap);
+
+      if (!mounted) return; // Pastikan widget masih terpasang
+
       setState(() {
         _isLoading = false;
       });
@@ -45,6 +48,8 @@ class _RegisterPageState extends State<RegisterPage> {
         Navigator.pushReplacementNamed(context, '/login');
       }
     } catch (e) {
+      if (!mounted) return; // Pastikan widget masih terpasang
+
       setState(() {
         _isLoading = false;
       });
@@ -54,6 +59,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _showCupertinoDialog(String title, String message) {
+    if (!mounted) return; // Pastikan widget masih terpasang
     showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
@@ -164,21 +170,22 @@ class _RegisterPageState extends State<RegisterPage> {
                           const BorderRadius.all(Radius.circular(10))),
                   child: TextField(
                     controller: _passwordController,
-                    obscureText: _obscurePassword,
+                    obscureText: !_passwordVisible, // Use the updated _passwordVisible value here
                     decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Masukkan Password',
-                        contentPadding: const EdgeInsets.all(10),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        )),
+                      border: InputBorder.none,
+                      hintText: 'Masukkan Password',
+                      contentPadding: const EdgeInsets.all(10),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(

@@ -24,16 +24,16 @@ class BookingPage extends StatefulWidget {
       required this.onUserUpdated});
 
   @override
-  _BookingPageState createState() => _BookingPageState();
+  BookingPageState createState() => BookingPageState();
 }
 
-class _BookingPageState extends State<BookingPage> {
+class BookingPageState extends State<BookingPage> {
   late Map<Product, int> _cartItems;
   DateTime? _startDate;
   DateTime? _endDate;
   File? _proofOfPayment;
-  final ImagePicker _picker = ImagePicker();
-  bool _needDelivery = false;
+  final ImagePicker picker = ImagePicker();
+  final bool _needDelivery = false;
   double _totalPrice = 0.0; // variabel ini untuk menyimpan total harga
 
   @override
@@ -595,7 +595,7 @@ class _BookingPageState extends State<BookingPage> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                     const SizedBox(height: 16),
                     Text(
                       'Total Harga: Rp ${formatCurrency(_totalPrice)}',
