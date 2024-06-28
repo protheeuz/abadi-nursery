@@ -1,10 +1,11 @@
-import 'package:abadinursery/widgets/customcircular.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:abadinursery/services/api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart';
-import 'register_page.dart';
+import 'package:abadinursery/models/user_model.dart';
+import '../services/session_manager.dart';
+import 'admin_dashboard.dart'; // Import dashboard admin
+import 'penyewa_dashboard.dart';
+import 'register_page.dart'; // Import dashboard penyewa
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,12 +19,12 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> _login() async {
+  void _login() async {
     String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
-      _showCupertinoDialog("Error", "Username dan password tidak boleh kosong");
+      _showCupertinoDialog("Ups", "Username dan Password harus diisi.");
       return;
     }
 
@@ -33,34 +34,47 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await ApiService.login(username, password);
-      if (response != null && response['access_token'] != null) {
-        final token = response['access_token'];
 
-        if (token != null) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setString('token', token);
-          print('Token saved: $token'); // Debugging
+      setState(() {
+        _isLoading = false;
+      });
 
-          // Redirect to main screen
+      if (response != null && response.containsKey('token')) {
+        // Simpan token dan user data
+        await SessionManager.saveAccessToken(response['token']);
+        final user = User.fromJson(response['user']);
+
+        // Redirect berdasarkan peran
+        if (user.role == 'admin') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
+            MaterialPageRoute(
+              builder: (context) => AdminDashboard(user: user),
+            ),
           );
-        } else {
-          _showCupertinoDialog("Error", "Token tidak ditemukan");
+        } else if (user.role == 'penyewa') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PenyewaDashboard(
+                  user: user,
+                  onUserUpdated: (User updatedUser) {
+                    // Handle user update
+                  }),
+            ),
+          );
         }
       } else {
-        _showCupertinoDialog("Error", "Gagal login. Silakan coba lagi.");
+        _showCupertinoDialog(
+            "Error", "Gagal login. Silakan cek username dan password Anda.");
       }
     } catch (e) {
-      print('Login error: $e');
+      setState(() {
+        _isLoading = false;
+      });
       _showCupertinoDialog(
           "Error", "Terjadi kesalahan saat login. Silakan coba lagi.");
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _showCupertinoDialog(String title, String message) {
@@ -96,15 +110,11 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(
-                  height: 50,
+                  height: 30,
                 ),
                 const Text(
                   "Masuk",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 25,
-                    fontFamily: 'Poppins',
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                 ),
                 Image.asset(
                   "assets/images/login.jpg",
@@ -112,21 +122,15 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                 ),
                 const Text(
-                  "Dapatkan akses login dari sini",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontFamily: 'Poppins',
-                  ),
+                  "Masukkan Username dan Kata Sandi Anda untuk Masuk",
+                  style: TextStyle(fontSize: 12),
                 ),
                 const SizedBox(
                   height: 20,
                 ),
                 const Text(
                   "Username",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontFamily: 'Poppins',
-                  ),
+                  style: TextStyle(fontSize: 12),
                 ),
                 Container(
                   decoration: BoxDecoration(
@@ -149,10 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const Text(
                   "Kata Sandi",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontFamily: 'Poppins',
-                  ),
+                  style: TextStyle(fontSize: 12),
                 ),
                 Container(
                   decoration: BoxDecoration(
@@ -164,40 +165,30 @@ class _LoginPageState extends State<LoginPage> {
                           const BorderRadius.all(Radius.circular(10))),
                   child: TextField(
                     controller: _passwordController,
-                    obscureText: false,
+                    obscureText: true,
                     decoration: const InputDecoration(
                         border: InputBorder.none,
-                        hintText: 'Masukkan Kata Sandi',
+                        hintText: 'Masukkan Password',
                         contentPadding: EdgeInsets.all(10)),
                   ),
                 ),
                 const SizedBox(
                   height: 20,
                 ),
-                _isLoading
-                    ? const Center(
-                        child: CustomCircularProgressIndicator(
-                        imagePath: 'assets/images/logo/circularcustom.png', size: 50,
-                      ))
-                    : MaterialButton(
-                        color: Theme.of(context).primaryColor,
-                        height: 25,
-                        minWidth: double.maxFinite,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5.0),
-                            side: BorderSide(
-                                color: Theme.of(context).primaryColor)),
-                        onPressed: _login,
-                        child: const Text(
-                          "Masuk",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                      ),
+                MaterialButton(
+                  color: Theme.of(context).primaryColor,
+                  height: 25,
+                  minWidth: double.maxFinite,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                      side: BorderSide(color: Theme.of(context).primaryColor)),
+                  onPressed: _isLoading ? null : _login,
+                  child: const Text(
+                    "Masuk",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                ),
                 const SizedBox(
                   height: 8,
                 ),
@@ -209,7 +200,6 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                           fontWeight: FontWeight.normal,
                           fontSize: 14,
-                          fontFamily: 'Poppins',
                           color: Colors.grey),
                     ),
                     InkWell(
@@ -220,9 +210,8 @@ class _LoginPageState extends State<LoginPage> {
                                 builder: (_) => const RegisterPage()));
                       },
                       child: Text(
-                        "Daftar di sini ",
+                        "Daftar ",
                         style: TextStyle(
-                            fontFamily: 'Poppins',
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                             color: Theme.of(context).primaryColor),

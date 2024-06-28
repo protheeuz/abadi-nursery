@@ -17,7 +17,11 @@ class BookingPage extends StatefulWidget {
   final User user;
   final Function(User) onUserUpdated;
 
-  const BookingPage({super.key, required this.cartItems, required this.user, required this.onUserUpdated});
+  const BookingPage(
+      {super.key,
+      required this.cartItems,
+      required this.user,
+      required this.onUserUpdated});
 
   @override
   _BookingPageState createState() => _BookingPageState();
@@ -70,49 +74,49 @@ class _BookingPageState extends State<BookingPage> {
     });
   }
 
-Future<void> _submitBooking(bool needDelivery) async {
-  try {
-    if (_proofOfPayment == null || _startDate == null || _endDate == null) {
-      throw Exception('Data belum lengkap');
+  Future<void> _submitBooking(bool needDelivery) async {
+    try {
+      if (_proofOfPayment == null || _startDate == null || _endDate == null) {
+        throw Exception('Data belum lengkap');
+      }
+
+      if (_totalPrice <= 0) {
+        throw Exception('Total belanja harus lebih dari 0');
+      }
+
+      print('Start Date: $_startDate');
+      print('End Date: $_endDate');
+      print('Proof of Payment: $_proofOfPayment');
+      print('Need Delivery: $needDelivery');
+      print('Total Sewa: $_totalPrice');
+
+      _cartItems.forEach((product, quantity) {
+        print('Product ID: ${product.id}, Quantity: $quantity');
+      });
+
+      await ApiService.submitBooking(_cartItems, _startDate!, _endDate!,
+          _proofOfPayment!, needDelivery, _totalPrice);
+      _showSuccessDialog();
+    } catch (e) {
+      print('Failed to submit booking: $e');
+      showSimpleNotification(
+        Text(
+          e.toString(),
+          style: const TextStyle(color: Colors.white),
+        ),
+        background: Colors.red,
+        leading: const Icon(
+          Icons.warning,
+          color: Colors.white,
+        ),
+        autoDismiss: true,
+        slideDismissDirection: DismissDirection.up,
+        contentPadding: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      );
+      throw Exception('Failed to submit booking');
     }
-    
-    if (_totalPrice <= 0) {
-      throw Exception('Total belanja harus lebih dari 0');
-    }
-
-    print('Start Date: $_startDate');
-    print('End Date: $_endDate');
-    print('Proof of Payment: $_proofOfPayment');
-    print('Need Delivery: $needDelivery');
-    print('Total Sewa: $_totalPrice');
-
-    _cartItems.forEach((product, quantity) {
-      print('Product ID: ${product.id}, Quantity: $quantity');
-    });
-
-    await ApiService.submitBooking(_cartItems, _startDate!, _endDate!, _proofOfPayment!, needDelivery, _totalPrice);
-    _showSuccessDialog();
-  } catch (e) {
-    print('Failed to submit booking: $e');
-    showSimpleNotification(
-      Text(
-        e.toString(),
-        style: const TextStyle(color: Colors.white),
-      ),
-      background: Colors.red,
-      leading: const Icon(
-        Icons.warning,
-        color: Colors.white,
-      ),
-      autoDismiss: true,
-      slideDismissDirection: DismissDirection.up,
-      contentPadding: const EdgeInsets.all(16),
-      duration: const Duration(seconds: 3),
-    );
-    throw Exception('Failed to submit booking');
   }
-}
-
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -177,7 +181,8 @@ Future<void> _submitBooking(bool needDelivery) async {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PenyewaDashboard(user: widget.user, onUserUpdated: widget.onUserUpdated),
+                    builder: (context) => PenyewaDashboard(
+                        user: widget.user, onUserUpdated: widget.onUserUpdated),
                   ),
                   (Route<dynamic> route) => false,
                 );
@@ -199,18 +204,19 @@ Future<void> _submitBooking(bool needDelivery) async {
     final formatter = NumberFormat('#,##0', 'id');
     return formatter.format(amount);
   }
+
   void _showIOSStyledNotification(BuildContext context, String message) {
-  showOverlayNotification(
-    (context) {
-      return IOSStyledNotification(
-        message: message,
-        icon: Icons.warning,
-        backgroundColor: Colors.grey, // Warna abu-abu untuk notifikasi
-      );
-    },
-    duration: const Duration(seconds: 3),
-  );
-}
+    showOverlayNotification(
+      (context) {
+        return IOSStyledNotification(
+          message: message,
+          icon: Icons.warning,
+          backgroundColor: Colors.grey, // Warna abu-abu untuk notifikasi
+        );
+      },
+      duration: const Duration(seconds: 3),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -434,108 +440,110 @@ Future<void> _submitBooking(bool needDelivery) async {
     );
   }
 
-void _showConfirmationBottomSheet(BuildContext context) {
-  if (_cartItems.isEmpty) {
-    _showIOSStyledNotification(context, 'Anda belum memilih item sama sekali');
-    return;
-  }
+  void _showConfirmationBottomSheet(BuildContext context) {
+    if (_cartItems.isEmpty) {
+      _showIOSStyledNotification(
+          context, 'Anda belum memilih item sama sekali');
+      return;
+    }
 
-  showModalBottomSheet(
-    context: context,
-    builder: (BuildContext context) {
-      return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setModalState) {
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: const Text('Tanggal Mulai'),
-                  trailing: Text(_startDate != null
-                      ? DateFormat('dd/MM/yyyy').format(_startDate!)
-                      : 'Pilih'),
-                  onTap: () async {
-                    final DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2101),
-                    );
-                    if (picked != null) {
-                      Navigator.pop(context);
-                      setState(() {
-                        _startDate = picked;
-                        if (_endDate != null &&
-                            _endDate!.isBefore(_startDate!)) {
-                          _endDate = null;
-                        }
-                        _updateTotalPrice();
-                      });
-                      _showConfirmationBottomSheet(context);
-                    }
-                  },
-                ),
-                ListTile(
-                  title: const Text('Tanggal Selesai'),
-                  trailing: Text(_endDate != null
-                      ? DateFormat('dd/MM/yyyy').format(_endDate!)
-                      : 'Pilih'),
-                  onTap: () async {
-                    final DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: _startDate ?? DateTime.now(),
-                      firstDate: _startDate ?? DateTime.now(),
-                      lastDate: DateTime(2101),
-                    );
-                    if (picked != null) {
-                      Navigator.pop(context);
-                      setState(() {
-                        _endDate = picked;
-                        _updateTotalPrice();
-                      });
-                      _showConfirmationBottomSheet(context);
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Total Harga: Rp ${formatCurrency(_totalPrice)}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    title: const Text('Tanggal Mulai'),
+                    trailing: Text(_startDate != null
+                        ? DateFormat('dd/MM/yyyy').format(_startDate!)
+                        : 'Pilih'),
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2101),
+                      );
+                      if (picked != null) {
+                        Navigator.pop(context);
+                        setState(() {
+                          _startDate = picked;
+                          if (_endDate != null &&
+                              _endDate!.isBefore(_startDate!)) {
+                            _endDate = null;
+                          }
+                          _updateTotalPrice();
+                        });
+                        _showConfirmationBottomSheet(context);
+                      }
+                    },
                   ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Menutup modal bottom sheet
-                    _showPaymentConfirmationDialog(); // Menampilkan dialog konfirmasi pembayaran
-                  },
-                  child: const Text(
-                    'Konfirmasi Pembayaran',
-                    style: TextStyle(
+                  ListTile(
+                    title: const Text('Tanggal Selesai'),
+                    trailing: Text(_endDate != null
+                        ? DateFormat('dd/MM/yyyy').format(_endDate!)
+                        : 'Pilih'),
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: _startDate ?? DateTime.now(),
+                        firstDate: _startDate ?? DateTime.now(),
+                        lastDate: DateTime(2101),
+                      );
+                      if (picked != null) {
+                        Navigator.pop(context);
+                        setState(() {
+                          _endDate = picked;
+                          _updateTotalPrice();
+                        });
+                        _showConfirmationBottomSheet(context);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Total Harga: Rp ${formatCurrency(_totalPrice)}',
+                    style: const TextStyle(
                       fontSize: 18,
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    },
-  );
-}
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Menutup modal bottom sheet
+                      _showPaymentConfirmationDialog(); // Menampilkan dialog konfirmasi pembayaran
+                    },
+                    child: const Text(
+                      'Konfirmasi Pembayaran',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   void _showPaymentConfirmationDialog() {
     if (_startDate == null || _endDate == null) {
-    _showIOSStyledNotification(context, 'Anda belum memilih rentang tanggal penyewaan');
-    return;
-  }
+      _showIOSStyledNotification(
+          context, 'Anda belum memilih rentang tanggal penyewaan');
+      return;
+    }
     bool needDelivery = false;
     bool showDeliveryWarning = false;
 
@@ -663,7 +671,18 @@ void _showConfirmationBottomSheet(BuildContext context) {
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8.0),
                         child: Text(
-                          '! Biaya Rp. 5.000 untuk menggunakan opsi pengantaran',
+                          '! Biaya Rp. 5.000 untuk menggunakan opsi pengantaran\n *Hanya menerima pengiriman Jabodetabek',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontFamily: 'Poppins',
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                    if (!needDelivery)
+                      const Center(
+                        child: Text(
+                          '! Maks. 3 Hari Pengambilan Tanaman',
                           style: TextStyle(
                             fontSize: 9,
                             fontFamily: 'Poppins',
@@ -675,8 +694,7 @@ void _showConfirmationBottomSheet(BuildContext context) {
                     ElevatedButton(
                       onPressed: () async {
                         await _pickProofOfPayment();
-                        setState(
-                            () {}); 
+                        setState(() {});
                       },
                       child: const Text('Upload Bukti Transfer'),
                     ),
@@ -686,8 +704,7 @@ void _showConfirmationBottomSheet(BuildContext context) {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () async {
-                          await _submitBooking(
-                              needDelivery);
+                          await _submitBooking(needDelivery);
                           Navigator.pop(context);
                           _showSuccessDialog();
                         },

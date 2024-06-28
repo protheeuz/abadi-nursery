@@ -248,7 +248,7 @@ class _AdminBookingPageState extends State<AdminBookingPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           content: CachedNetworkImage(
-            imageUrl: 'http://192.168.20.136:5000/bookings/$proofOfPayment',
+            imageUrl: 'https://abadinursery.pythonanywhere.com/bookings/$proofOfPayment',
             placeholder: (context, url) =>
                 const CustomCircularProgressIndicator(
               imagePath: 'assets/images/logo/circularcustom.png',

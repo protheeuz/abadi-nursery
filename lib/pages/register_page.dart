@@ -4,7 +4,7 @@ import 'package:abadinursery/services/api_service.dart';
 import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
   _RegisterPageState createState() => _RegisterPageState();
@@ -16,6 +16,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _namaLengkapController =
       TextEditingController(); // Controller untuk Nama Lengkap
   bool _isLoading = false;
+  bool _obscurePassword = true; // Obscure password flag
 
   void _register() async {
     String username = _usernameController.text.trim();
@@ -33,7 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       final response =
-          await ApiService.register(username, password, namaLengkap, 'penyewa');
+          await ApiService.register(username, password, namaLengkap);
       setState(() {
         _isLoading = false;
       });
@@ -163,11 +164,21 @@ class _RegisterPageState extends State<RegisterPage> {
                           const BorderRadius.all(Radius.circular(10))),
                   child: TextField(
                     controller: _passwordController,
-                    obscureText: false,
-                    decoration: const InputDecoration(
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
                         border: InputBorder.none,
                         hintText: 'Masukkan Password',
-                        contentPadding: EdgeInsets.all(10)),
+                        contentPadding: const EdgeInsets.all(10),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        )),
                   ),
                 ),
                 const SizedBox(
@@ -181,11 +192,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5.0),
                       side: BorderSide(color: Theme.of(context).primaryColor)),
+                  onPressed: _isLoading ? null : _register,
                   child: const Text(
                     "Daftar Akun",
                     style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
-                  onPressed: _isLoading ? null : _register,
                 ),
                 const SizedBox(
                   height: 8,

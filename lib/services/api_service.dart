@@ -8,7 +8,7 @@ import 'package:path/path.dart' as path;
 import 'session_manager.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.20.136:5000';
+  static const String baseUrl = 'https://abadinursery.pythonanywhere.com';
 
   static Future<void> submitBooking(
       Map<Product, int> cartItems,
@@ -79,7 +79,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> register(
-      String username, String password, String namaLengkap, String role) async {
+      String username, String password, String namaLengkap) async {
     try {
       print('Mengirim request ke $baseUrl/auth/register');
       final response = await http.post(
@@ -88,8 +88,8 @@ class ApiService {
         body: jsonEncode({
           'username': username,
           'password': password,
-          'nama_lengkap': namaLengkap, // Menambahkan nama_lengkap
-          'role': role // Menambahkan role
+          'nama_lengkap': namaLengkap,
+          'role': 'penyewa' // Menggunakan nilai tetap 'penyewa' untuk mobile
         }),
       );
 
@@ -141,7 +141,7 @@ class ApiService {
         print('User data from API: $userData');
 
         // Buat objek User dari data yang diperoleh
-        const baseUrl = 'http://192.168.20.136:5000/profile/';
+        const baseUrl = 'https://abadinursery.pythonanywhere.com/profile/';
         final user = User.fromJson({
           ...userData,
           'profile_picture': userData['profile_picture'] != null &&
@@ -159,33 +159,6 @@ class ApiService {
       throw Exception('Failed to get user data');
     }
   }
-
-// static Future<User> getUserData(String token) async {
-//   try {
-//     final response = await http.get(
-//       Uri.parse(
-//           '$baseUrl/user/getuser'), // Perbarui URL endpoint untuk getuser
-//       headers: {
-//         'Authorization': 'Bearer $token',
-//       },
-//     );
-
-//     if (response.statusCode == 200) {
-//       final userData = jsonDecode(response.body);
-//       print('User data from API: $userData');
-
-//       // Buat objek User dari data yang diperoleh
-//       final user = User.fromJson(userData);
-//       print('Profile Picture URL after parsing: ${user.profilePicture}');
-//       return user;
-//     } else {
-//       throw Exception('Failed to load user data');
-//     }
-//   } catch (e) {
-//     print('Error during getUserData: $e');
-//     throw Exception('Failed to get user data');
-//   }
-// }
 
   static Future<User> getUserDataById(int userId) async {
     final token = await SessionManager.getAccessToken();

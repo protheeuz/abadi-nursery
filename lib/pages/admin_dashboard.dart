@@ -90,7 +90,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: const Text(
+          'Admin Dashboard',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+          ),
+        ),
+        backgroundColor: const Color.fromARGB(255, 165, 255, 168),
       ),
       body: Column(
         children: [

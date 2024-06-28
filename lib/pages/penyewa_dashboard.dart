@@ -6,7 +6,6 @@ import 'package:abadinursery/models/product_model.dart';
 import 'package:abadinursery/models/user_model.dart';
 import 'package:abadinursery/services/api_service.dart';
 import 'package:abadinursery/widgets/customcircular.dart';
-import 'package:abadinursery/widgets/customrefresh.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:intl/intl.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -27,6 +26,7 @@ class PenyewaDashboard extends StatefulWidget {
 
 class _PenyewaDashboardState extends State<PenyewaDashboard> {
   List<Product> _products = [];
+  final ScrollController _scrollController = ScrollController();
   bool _isLoading = true;
   int _currentCarouselIndex = 0;
   int _notificationCount = 0;
@@ -191,68 +191,73 @@ class _PenyewaDashboardState extends State<PenyewaDashboard> {
     );
   }
 
-List<Widget> _buildTimeline(Booking booking) {
-  if (!booking.needDelivery) {
-    return [const Text('Pengiriman tidak diperlukan')];
-  }
-
-  List<Map<String, String>> statuses = [
-    {'status': 'Sedang diproses', 'description': 'Pesanan sedang diproses'},
-    {'status': 'Sedang dikemas', 'description': 'Pesanan sedang dikemas'},
-    {'status': 'Sedang dikirim', 'description': 'Pesanan sedang dikirim'},
-    {'status': 'Sudah sampai', 'description': 'Pesanan sudah sampai di tujuan'},
-  ];
-
-  bool reachedCurrentStatus = false;
-  bool isPastStatus = true;
-
-  return statuses.map((status) {
-    bool isActive = booking.statusPengiriman == status['status'];
-
-    if (isActive) {
-      reachedCurrentStatus = true;
-      isPastStatus = false;
+  List<Widget> _buildTimeline(Booking booking) {
+    if (!booking.needDelivery) {
+      return [const Text('Pengiriman tidak diperlukan')];
     }
 
-    return TimelineTile(
-      alignment: TimelineAlign.manual,
-      lineXY: 0.1,
-      isFirst: status['status'] == 'Sedang diproses',
-      isLast: status['status'] == 'Sudah sampai',
-      indicatorStyle: IndicatorStyle(
-        width: 20,
-        color: isActive || isPastStatus ? Colors.green : Colors.grey,
-        iconStyle: IconStyle(
-          iconData: isActive || isPastStatus ? Icons.check_circle : Icons.radio_button_unchecked,
+    List<Map<String, String>> statuses = [
+      {'status': 'Sedang diproses', 'description': 'Pesanan sedang diproses'},
+      {'status': 'Sedang dikemas', 'description': 'Pesanan sedang dikemas'},
+      {'status': 'Sedang dikirim', 'description': 'Pesanan sedang dikirim'},
+      {
+        'status': 'Sudah sampai',
+        'description': 'Pesanan sudah sampai di tujuan'
+      },
+    ];
+
+    bool reachedCurrentStatus = false;
+    bool isPastStatus = true;
+
+    return statuses.map((status) {
+      bool isActive = booking.statusPengiriman == status['status'];
+
+      if (isActive) {
+        reachedCurrentStatus = true;
+        isPastStatus = false;
+      }
+
+      return TimelineTile(
+        alignment: TimelineAlign.manual,
+        lineXY: 0.1,
+        isFirst: status['status'] == 'Sedang diproses',
+        isLast: status['status'] == 'Sudah sampai',
+        indicatorStyle: IndicatorStyle(
+          width: 20,
           color: isActive || isPastStatus ? Colors.green : Colors.grey,
+          iconStyle: IconStyle(
+            iconData: isActive || isPastStatus
+                ? Icons.check_circle
+                : Icons.radio_button_unchecked,
+            color: isActive || isPastStatus ? Colors.green : Colors.grey,
+          ),
         ),
-      ),
-      beforeLineStyle: LineStyle(
-        color: isActive || isPastStatus ? Colors.green : Colors.grey,
-        thickness: 6,
-      ),
-      afterLineStyle: LineStyle(
-        color: reachedCurrentStatus ? Colors.grey : Colors.green,
-        thickness: 6,
-      ),
-      endChild: Container(
-        constraints: const BoxConstraints(minHeight: 80),
-        color: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            status['description']!,
-            style: TextStyle(
-              fontSize: 16,
-              fontFamily: 'Poppins',
-              color: isActive || isPastStatus ? Colors.green : Colors.grey,
+        beforeLineStyle: LineStyle(
+          color: isActive || isPastStatus ? Colors.green : Colors.grey,
+          thickness: 6,
+        ),
+        afterLineStyle: LineStyle(
+          color: reachedCurrentStatus ? Colors.grey : Colors.green,
+          thickness: 6,
+        ),
+        endChild: Container(
+          constraints: const BoxConstraints(minHeight: 80),
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              status['description']!,
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: 'Poppins',
+                color: isActive || isPastStatus ? Colors.green : Colors.grey,
+              ),
             ),
           ),
         ),
-      ),
-    );
-  }).toList();
-}
+      );
+    }).toList();
+  }
 
   void _addToCart(Product product) {
     setState(() {
@@ -313,151 +318,158 @@ List<Widget> _buildTimeline(Booking booking) {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: CustomRefreshIndicator(
+        child: RefreshIndicator(
           onRefresh: _refreshProducts,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 11.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${getGreeting()},\n${widget.user.namaLengkap}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Poppins',
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 11.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${getGreeting()},\n${widget.user.namaLengkap}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Stack(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.notifications_none_outlined,
+                                        size: 25),
+                                    onPressed: () => _showBookingList(context),
+                                  ),
+                                  if (_notificationCount > 0)
+                                    Positioned(
+                                      right: -1,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green[300],
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 13,
+                                          minHeight: 13,
+                                        ),
+                                        child: Text(
+                                          '$_notificationCount',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(),
+                              Stack(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.shopping_cart_outlined,
+                                        size: 20),
+                                    onPressed: _navigateToCart,
+                                  ),
+                                  if (_cartItems.isNotEmpty)
+                                    Positioned(
+                                      right: 10,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green[300],
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 13,
+                                          minHeight: 13,
+                                        ),
+                                        child: Text(
+                                          '${_cartItems.values.fold<int>(0, (sum, count) => sum + (count))}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    Row(
-                      children: [
-                        Stack(
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                  Icons.notifications_none_outlined,
-                                  size: 25),
-                              onPressed: () => _showBookingList(context),
+                    _isLoading
+                        ? const Center(
+                            child: CustomCircularProgressIndicator(
+                              imagePath:
+                                  'assets/images/logo/circularcustom.png',
+                              size: 60,
                             ),
-                            if (_notificationCount > 0)
-                              Positioned(
-                                right: -1,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green[300],
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 13,
-                                    minHeight: 13,
-                                  ),
-                                  child: Text(
-                                    '$_notificationCount',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                    textAlign: TextAlign.center,
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildBannerCarousel(),
+                              _buildCarouselIndicator(),
+                              const Padding(
+                                padding: EdgeInsets.only(left: 14),
+                                child: Text(
+                                  "Katalog Kami",
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
-                        const SizedBox(),
-                        Stack(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.shopping_cart_outlined,
-                                  size: 20),
-                              onPressed: _navigateToCart,
-                            ),
-                            if (_cartItems.isNotEmpty)
-                              Positioned(
-                                right: 10,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green[300],
-                                    borderRadius: BorderRadius.circular(10),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: _products.length,
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 8,
+                                    mainAxisSpacing: 8,
+                                    childAspectRatio: 0.75,
                                   ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 13,
-                                    minHeight: 13,
-                                  ),
-                                  child: Text(
-                                    '${_cartItems.values.fold<int>(0, (sum, count) => sum + (count))}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
+                                  itemBuilder: (context, index) {
+                                    return ProductCard(
+                                      product: _products[index],
+                                      onAddToCart: () =>
+                                          _addToCart(_products[index]),
+                                    );
+                                  },
                                 ),
                               ),
-                          ],
-                        ),
-                      ],
-                    ),
+                            ],
+                          ),
                   ],
                 ),
               ),
-              _isLoading
-                  ? const Center(
-                      child: CustomCircularProgressIndicator(
-                        imagePath: 'assets/images/logo/circularcustom.png',
-                        size: 60,
-                      ),
-                    )
-                  : Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildBannerCarousel(),
-                            _buildCarouselIndicator(),
-                            const Padding(
-                              padding: EdgeInsets.only(left: 14),
-                              child: Text(
-                                "Katalog Kami",
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _products.length,
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 8,
-                                  mainAxisSpacing: 8,
-                                  childAspectRatio: 0.75,
-                                ),
-                                itemBuilder: (context, index) {
-                                  return ProductCard(
-                                    product: _products[index],
-                                    onAddToCart: () =>
-                                        _addToCart(_products[index]),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
             ],
           ),
         ),

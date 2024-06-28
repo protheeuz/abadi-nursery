@@ -1,8 +1,8 @@
 class Product {
   final int id;
   final String namaTanaman;
-  final String jenisTanaman;
   final double hargaSewa;
+  final String jenisTanaman;
   final String fotoTanaman;
   final int jumlahStok;
 
@@ -16,9 +16,9 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-    const baseUrl = 'http://192.168.20.136:5000/products/';
+    const baseUrl = 'https://abadinursery.pythonanywhere.com/products/';
     String fotoTanaman = json['foto_tanaman'];
-    if (fotoTanaman.contains('assets/product/')) {
+    if (fotoTanaman.contains('/home/abadinursery/abadinursery/assets/product/')) {
       fotoTanaman = baseUrl + fotoTanaman.split('/').last;
     }
     return Product(

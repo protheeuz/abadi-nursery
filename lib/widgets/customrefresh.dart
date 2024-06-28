@@ -15,7 +15,8 @@ class CustomRefreshIndicator extends StatefulWidget {
 }
 
 class _CustomRefreshIndicatorState extends State<CustomRefreshIndicator> {
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
 
   @override
   Widget build(BuildContext context) {
