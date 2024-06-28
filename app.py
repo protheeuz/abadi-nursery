@@ -1,9 +1,11 @@
-from flask import Flask, render_template, send_from_directory
-from flask_mysqldb import MySQL
+from flask import Flask, render_template, send_from_directory, request, jsonify
 from config import Config
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from datetime import timedelta
+from extensions import mysql
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -11,11 +13,10 @@ app.config.from_object(Config)
 app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies']
 app.config['JWT_COOKIE_SECURE'] = False  # Atur ke True jika menggunakan HTTPS
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
-app.config['UPLOAD_FOLDER_BOOKINGS'] = './assets/bookings/'
-app.config['UPLOAD_FOLDER_PRODUCTS'] = './assets/product/'
-app.config['UPLOAD_FOLDER_PROFILE'] = './assets/profile/'
 
-mysql = MySQL(app)
+# Inisialisasi MySQL
+mysql.init_app(app)
+
 jwt = JWTManager(app)
 CORS(app)
 
@@ -26,12 +27,48 @@ def uploaded_file_bookings(filename):
 
 @app.route('/products/<filename>')
 def uploaded_file_products(filename):
-    print(f"Requesting file: {filename}") 
     return send_from_directory(app.config['UPLOAD_FOLDER_PRODUCTS'], filename)
 
 @app.route('/profile/<filename>')
 def uploaded_file_profile(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER_PROFILE'], filename)
+
+# Rute untuk mengunggah file
+@app.route('/upload/bookings', methods=['POST'])
+def upload_file_bookings():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER_BOOKINGS'], filename))
+        return jsonify({'success': True}), 201
+
+@app.route('/upload/products', methods=['POST'])
+def upload_file_products():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER_PRODUCTS'], filename))
+        return jsonify({'success': True}), 201
+
+@app.route('/upload/profile', methods=['POST'])
+def upload_file_profile():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER_PROFILE'], filename))
+        return jsonify({'success': True}), 201
 
 # Daftarkan blueprint
 from routes.product_routes import product_blueprint
