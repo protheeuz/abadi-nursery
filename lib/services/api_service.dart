@@ -89,7 +89,7 @@ class ApiService {
           'username': username,
           'password': password,
           'nama_lengkap': namaLengkap,
-          // Tidak perlu mengirimkan role dari mobile
+          'role': 'penyewa', // Pastikan mengirimkan role 'penyewa'
         }),
       );
 

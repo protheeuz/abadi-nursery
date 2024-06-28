@@ -3,8 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:abadinursery/services/api_service.dart';
 import 'package:abadinursery/models/user_model.dart';
 import '../services/session_manager.dart';
-import 'admin_dashboard.dart'; // Import dashboard admin
-import 'penyewa_dashboard.dart'; // Import dashboard penyewa
+import 'admin_dashboard.dart';
+import 'penyewa_dashboard.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -18,7 +18,7 @@ class LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _passwordVisible = false; // Tambahkan ini
+  bool _passwordVisible = false;
 
   void _login() async {
     String username = _usernameController.text.trim();
@@ -36,20 +36,16 @@ class LoginPageState extends State<LoginPage> {
     try {
       final response = await ApiService.login(username, password);
 
-      if (!mounted) return; // Pastikan widget masih terpasang
-
       setState(() {
         _isLoading = false;
       });
 
       if (response != null && response.containsKey('token')) {
-        // Simpan token dan user data
         await SessionManager.saveAccessToken(response['token']);
         final user = User.fromJson(response['user']);
 
         if (!mounted) return;
 
-        // Redirect berdasarkan peran
         if (user.role == 'admin') {
           Navigator.pushReplacement(
             context,
@@ -68,13 +64,15 @@ class LoginPageState extends State<LoginPage> {
                   }),
             ),
           );
+        } else {
+          _showCupertinoDialog("Error", "Role tidak valid");
         }
       } else {
         _showCupertinoDialog(
             "Error", "Gagal login. Silakan cek username dan password Anda.");
       }
     } catch (e) {
-      if (!mounted) return; // Pastikan widget masih terpasang
+      if (!mounted) return;
 
       setState(() {
         _isLoading = false;
@@ -85,7 +83,7 @@ class LoginPageState extends State<LoginPage> {
   }
 
   void _showCupertinoDialog(String title, String message) {
-    if (!mounted) return; // Pastikan widget masih terpasang
+    if (!mounted) return;
     showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
@@ -173,8 +171,7 @@ class LoginPageState extends State<LoginPage> {
                           const BorderRadius.all(Radius.circular(10))),
                   child: TextField(
                     controller: _passwordController,
-                    obscureText:
-                        !_passwordVisible, // Use the updated _passwordVisible value here
+                    obscureText: !_passwordVisible,
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: 'Masukkan Password',

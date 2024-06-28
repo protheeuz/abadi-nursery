@@ -34,7 +34,7 @@ class RegisterPageState extends State<RegisterPage> {
 
     try {
       final response =
-          await ApiService.register(username, password, namaLengkap);
+          await ApiService.register(username, password, namaLengkap); // Tambahkan 'penyewa'
 
       if (!mounted) return; // Pastikan widget masih terpasang
 
@@ -170,14 +170,17 @@ class RegisterPageState extends State<RegisterPage> {
                           const BorderRadius.all(Radius.circular(10))),
                   child: TextField(
                     controller: _passwordController,
-                    obscureText: !_passwordVisible, // Use the updated _passwordVisible value here
+                    obscureText:
+                        !_passwordVisible, // Use the updated _passwordVisible value here
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: 'Masukkan Password',
                       contentPadding: const EdgeInsets.all(10),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
                         onPressed: () {
                           setState(() {

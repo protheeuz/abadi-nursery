@@ -7,12 +7,12 @@ class BottomNavBar extends StatelessWidget {
   final Function() onLogout;
 
   const BottomNavBar({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onItemTapped,
     required this.isAdmin,
     required this.onLogout,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

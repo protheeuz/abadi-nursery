@@ -37,7 +37,9 @@ class MyApp extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final User? user;
+
+  const MainScreen({super.key, this.user});
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -52,7 +54,12 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchUserData();
+    if (widget.user != null) {
+      user = widget.user;
+      _initializePages();
+    } else {
+      _fetchUserData();
+    }
   }
 
   Future<void> _fetchUserData() async {
@@ -72,26 +79,8 @@ class _MainScreenState extends State<MainScreen> {
       final fetchedUser = await ApiService.getUserData(token);
       setState(() {
         user = fetchedUser;
+        _initializePages();
         _isLoading = false;
-
-        if (user!.role == 'admin') {
-          _pages = [
-            AdminDashboard(user: user!),
-            const AdminBookingPage(), 
-            const AddProductPage(),
-            ProfilePage(
-                user: user!,
-                onUserUpdated: _updateUser), 
-          ];
-        } else {
-          _pages = [
-            PenyewaDashboard(user: user!, onUserUpdated: _updateUser),
-            const BookingListPage(),
-            ProfilePage(
-                user: user!,
-                onUserUpdated: _updateUser), 
-          ];
-        }
       });
       print('User data set: ${user!.username}, ${user!.role}');
     } catch (e) {
@@ -101,6 +90,28 @@ class _MainScreenState extends State<MainScreen> {
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     }
+  }
+
+  void _initializePages() {
+    if (user!.role == 'admin') {
+      _pages = [
+        AdminDashboard(user: user!),
+        const AdminBookingPage(),
+        const AddProductPage(),
+        ProfilePage(
+            user: user!,
+            onUserUpdated: _updateUser),
+      ];
+    } else {
+      _pages = [
+        PenyewaDashboard(user: user!, onUserUpdated: _updateUser),
+        const BookingListPage(),
+        ProfilePage(
+            user: user!,
+            onUserUpdated: _updateUser),
+      ];
+    }
+    _isLoading = false;
   }
 
   void _onItemTapped(int index) {

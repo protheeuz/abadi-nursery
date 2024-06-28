@@ -34,16 +34,18 @@ class ProductCard extends StatelessWidget {
               topLeft: Radius.circular(15.0),
               topRight: Radius.circular(15.0),
             ),
-            child: CachedNetworkImage(
-              imageUrl: product.fotoTanaman,
-              fit: BoxFit.cover,
-              width: double.infinity,
+            child: SizedBox(
               height: 97,
-              placeholder: (context, url) =>
-                  const CustomCircularProgressIndicator(
-                imagePath: 'assets/images/logo/circularcustom.png',
+              width: double.infinity,
+              child: CachedNetworkImage(
+                imageUrl: product.fotoTanaman,
+                fit: BoxFit.cover,
+                placeholder: (context, url) =>
+                    const CustomCircularProgressIndicator(
+                  imagePath: 'assets/images/logo/circularcustom.png',
+                ),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
               ),
-              errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
           ),
           Padding(
@@ -122,14 +124,14 @@ class ProductCard extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 12), // Menyesuaikan padding internal tombol
-                          minimumSize: const Size(50, 36), // Mengurangi ukuran minimum
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          minimumSize: const Size(50, 36),
                         ),
                         child: const Text(
                           'Pesan',
                           style: TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 12, // Ukuran font lebih kecil
+                            fontSize: 12,
                           ),
                         ),
                       ),
