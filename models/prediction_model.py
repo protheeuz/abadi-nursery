@@ -35,9 +35,9 @@ def predict():
     forecasts_tes = {}
 
     arima_params = {
-        'Anggrek': {'order': (2, 1, 1)},
-        'Koleksi Kita': {'order': (0, 0, 0)},
-        'Tanaman Besar': {'order': (0, 1, 1)},
+        'Anggrek': {'order': (4, 1, 1)},
+        'Koleksi Kita': {'order': (4, 1, 1)},
+        'Tanaman Besar': {'order': (1, 1, 4)},
     }
     tes_params = {
         'Anggrek': {'trend': 'add', 'seasonal': 'add', 'seasonal_periods': 12, 'alpha': 0.2, 'beta': 0.2, 'gamma': 0.2},
