@@ -54,15 +54,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.user != null) {
-      user = widget.user;
-      _initializePages();
-      setState(() {
-        _isLoading = false;
-      });
-    } else {
-      _fetchUserData();
-    }
+    _fetchUserData();
   }
 
   Future<void> _fetchUserData() async {

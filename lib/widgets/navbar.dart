@@ -19,7 +19,7 @@ class BottomNavBar extends StatelessWidget {
     return BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: (index) {
-        if (index == (isAdmin ? 3 : 3)) {
+        if (index == 3) {
           onLogout();
         } else {
           onItemTapped(index);

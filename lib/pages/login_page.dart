@@ -3,10 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:abadinursery/services/api_service.dart';
 import 'package:abadinursery/models/user_model.dart';
 import '../services/session_manager.dart';
-import 'admin_dashboard.dart';
-import 'penyewa_dashboard.dart';
-import 'register_page.dart';
+import 'package:abadinursery/main.dart';
 
+import 'register_page.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -46,27 +45,12 @@ class LoginPageState extends State<LoginPage> {
 
         if (!mounted) return;
 
-        if (user.role == 'admin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AdminDashboard(user: user),
-            ),
-          );
-        } else if (user.role == 'penyewa') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PenyewaDashboard(
-                  user: user,
-                  onUserUpdated: (User updatedUser) {
-                    // Handle user update
-                  }),
-            ),
-          );
-        } else {
-          _showCupertinoDialog("Error", "Role tidak valid");
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MainScreen(user: user),
+          ),
+        );
       } else {
         _showCupertinoDialog(
             "Error", "Gagal login. Silakan cek username dan password Anda.");
