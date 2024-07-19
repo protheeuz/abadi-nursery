@@ -5,7 +5,7 @@ import 'package:abadinursery/models/booking_model.dart';
 import 'package:intl/intl.dart';
 
 class BookingListPage extends StatefulWidget {
-  const BookingListPage({Key? key}) : super(key: key);
+  const BookingListPage({super.key});
 
   @override
   _BookingListPageState createState() => _BookingListPageState();

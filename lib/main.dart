@@ -57,6 +57,9 @@ class _MainScreenState extends State<MainScreen> {
     if (widget.user != null) {
       user = widget.user;
       _initializePages();
+      setState(() {
+        _isLoading = false;
+      });
     } else {
       _fetchUserData();
     }
@@ -98,20 +101,16 @@ class _MainScreenState extends State<MainScreen> {
         AdminDashboard(user: user!),
         const AdminBookingPage(),
         const AddProductPage(),
-        ProfilePage(
-            user: user!,
-            onUserUpdated: _updateUser),
+        ProfilePage(user: user!, onUserUpdated: _updateUser),
       ];
     } else {
       _pages = [
         PenyewaDashboard(user: user!, onUserUpdated: _updateUser),
         const BookingListPage(),
-        ProfilePage(
-            user: user!,
-            onUserUpdated: _updateUser),
+        ProfilePage(user: user!, onUserUpdated: _updateUser),
       ];
     }
-    _isLoading = false;
+    print('Pages initialized for role: ${user!.role}');
   }
 
   void _onItemTapped(int index) {

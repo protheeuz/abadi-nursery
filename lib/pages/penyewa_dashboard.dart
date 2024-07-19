@@ -47,6 +47,7 @@ class _PenyewaDashboardState extends State<PenyewaDashboard> {
         _products = products;
         _isLoading = false;
       });
+      print('Products fetched: ${_products.length}'); // Debugging
     } catch (e) {
       print('Failed to load products: $e');
       setState(() {
